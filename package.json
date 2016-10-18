@@ -2,6 +2,7 @@
   "name": "ssdp-service-discovery",
   "version": "0.0.1",
   "dependencies": {
-    "node-ssdp": "^2.8.0"
+    "node-ssdp": "^2.8.0",
+    "restler-promise": "0.0.3"
   }
 }

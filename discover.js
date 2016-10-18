@@ -1,19 +1,28 @@
 var ssdp = require('node-ssdp').Client
     , client = new ssdp({})
     , found = false
+    , rest = require('restler-promise')(Promise);
 
-client.start()
-
-client.on('notify', function () {
-    //console.log('Got a notification.')
-})
+client.start();
 
 client.on('response', function inResponse(headers, code, rinfo) {
-    found = true
-    console.log('Got a response to an m-search:\n%d\n%s\n%s', code, JSON.stringify(headers, null, '  '), JSON.stringify(rinfo, null, '  '))
-})
+    found = true;
+    if (headers.LOCATION !== undefined) {
+        rest.get(headers.LOCATION, {
+            parser: rest.restler.parsers.xml
+        }).then(function(result) {
+            if (result.data.root.device[0].manufacturer[0].toUpperCase().indexOf('YAMAHA') >= 0) {
+                console.log(
+                    "Found", result.data.root.device[0].manufacturer[0],
+                    result.data.root.device[0].modelName[0],
+                    "address", rinfo.address
+                );
+            }
 
-//client.search('urn:schemas-upnp-org:device:MediaRenderer:1')
+        })
+    }
+});
+
 client.search('urn:schemas-upnp-org:device:MediaRenderer:1')
 setTimeout(function() {
     if (!found) {
@@ -21,12 +30,8 @@ setTimeout(function() {
     }
 }, 5000);
 
-// Or maybe if you want to scour for everything after 5 seconds
-//setTimeout(function() {
-//    client.search('ssdp:all')
-//}, 5000)
 
 // And after 10 seconds, you want to stop
 setTimeout(function () {
     client.stop()
-}, 20000)
+}, 10000);
